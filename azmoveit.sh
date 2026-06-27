@@ -29,6 +29,11 @@ PRESERVE_PERMISSIONS="${PRESERVE_PERMISSIONS:-false}"
 # AZURE_USE_MSI: call `az login --identity` at startup (set true for Container Jobs
 # with an assigned managed identity; leave false when using an existing CLI session)
 AZURE_USE_MSI="${AZURE_USE_MSI:-false}"
+# OVERWRITE: azcopy --overwrite value
+# 'false' skips files already at the destination,
+# 'true' force-overwrites files at the destination,
+# 'ifSourceNewer' (default) overwrites only if the source file is newer than the destination
+OVERWRITE="${OVERWRITE:-ifSourceNewer}"
 
 # Validate types
 [[ "$SRC_TYPE" == "file" || "$SRC_TYPE" == "blob" ]] || \
@@ -228,6 +233,9 @@ if [[ "$SRC_TYPE" == "file" && "$DST_TYPE" == "file" ]]; then
 elif [[ "$PRESERVE_PERMISSIONS" == "true" ]]; then
   log "Warning: PRESERVE_PERMISSIONS=true ignored — SMB permissions require file-to-file copies."
 fi
+
+COPY_FLAGS+=(--overwrite="$OVERWRITE")
+log "Overwrite mode: $OVERWRITE"
 
 # AzCopy copy
 log "Starting AzCopy copy (${SRC_TYPE} -> ${DST_TYPE})."
